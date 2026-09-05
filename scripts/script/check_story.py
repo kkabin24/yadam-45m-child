@@ -142,13 +142,8 @@ def check(path: pathlib.Path, voices_cfg: dict):
     if ratio < NARRATION_MIN_RATIO:
         warns.append(f"W2 나레이션 비중 {ratio:.0%} (권장 {NARRATION_MIN_RATIO:.0%} 이상) — 라디오드라마가 된다")
 
-    first = next((t for _, t in lines if t), "")
-    if not any(first.startswith(o) for o in OPENERS):
-        warns.append(f"W3 첫 문장이 옛이야기 시작구가 아니다: {first[:30]}…")
-
-    tail = [t for _, t in lines if t][-3:]          # 마지막 한 줄이 아니라 닫는 세 줄을 본다
-    if not any(w in " ".join(tail) for w in SLEEP_WORDS):
-        warns.append(f"W4 마지막 세 줄이 잠으로 이어지지 않는다: {tail[-1][:40]}…")
+    # ★W4 는 폐기했다 — 닫는 낱말을 강제하면 20편이 같은 문장으로 끝난다(4회전 실측: 20/20 동일).
+    #   닫는 방식의 다양성은 아래 C2 가 전체 단위로 본다.
 
     for w in LOUD:
         if w in spoken:
@@ -157,8 +152,11 @@ def check(path: pathlib.Path, voices_cfg: dict):
         if w in spoken:
             warns.append(f"W5 설교체/청자 질문 '{w}'")
 
+    first = next((t for _, t in lines if t), "")
+    tail = [t for _, t in lines if t][-3:]
     return {"file": path.name, "chars": n, "minutes": round(n / CHARS_PER_MIN, 1),
-            "speakers": uniq, "errors": errs, "warnings": warns}
+            "speakers": uniq, "errors": errs, "warnings": warns,
+            "first": first, "tail": " ".join(tail)}
 
 
 def main() -> int:
@@ -187,6 +185,25 @@ def main() -> int:
                 print(f"        ✗ {e}")
             for w in r["warnings"]:
                 print(f"        · {w}")
+        # ── C: 전체 단위 다양성 (편 하나만 보면 안 보이고, 12편을 이어 들으면 드러난다) ──
+        if len(rows) >= 5:
+            corpus = []
+            same_open = sum(1 for r in rows if r["first"].startswith("옛날 옛날"))
+            if same_open / len(rows) > 0.5:
+                corpus.append(f"C1 {same_open}/{len(rows)}편이 「옛날 옛날」로 시작한다 "
+                              f"(권장 절반 이하) — 이어 들으면 같은 소리로 열린다")
+            ends = [r["tail"].rstrip("…") for r in rows]
+            fmt = sum(1 for e in ends if "잠에" in e or "잠이 들" in e or "잠들" in e)
+            if fmt / len(rows) > 0.5:
+                corpus.append(f"C2 {fmt}/{len(rows)}편이 「…잠에 들었답니다」 계열로 끝난다 "
+                              f"(권장 절반 이하) — 닫는 신호로서의 힘을 잃는다")
+            dap = sum(1 for r in rows if r["tail"].rstrip("… ").endswith("답니다."))
+            if dap / len(rows) > 0.7:
+                corpus.append(f"C3 {dap}/{len(rows)}편의 마지막 어미가 「~답니다」다 (권장 70% 이하)")
+            for c in corpus:
+                print(f"  · {c}")
+            if corpus:
+                print()
         tot = sum(r["chars"] for r in rows)
         print(f"\n{len(rows)}편 / 합계 {tot:,}자 / 약 {tot/250/60:.2f}시간 "
               f"/ ERROR {sum(len(r['errors']) for r in rows)} "
