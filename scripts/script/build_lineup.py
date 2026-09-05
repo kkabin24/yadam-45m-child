@@ -23,6 +23,9 @@ import argparse, json, pathlib, re, sys
 LINE = re.compile(r"^([^\s:\[][^:]{0,15}):\s*(.+)$")
 TAG = re.compile(r"\[[^\]]*\]")
 GENRE = re.compile(r"^-\s*갈래\s*:\s*(.+)$", re.M)
+# ★편별 각성도가 적혀 있으면 그것을 쓴다. 갈래만으로 매기면 너무 거칠다 —
+#   「해와 달이 된 오누이」는 유래담이지만 곡선이 최악이고, 「호랑이와 곶감」은 웃음인데 상위권이다.
+AROUSAL_RE = re.compile(r"^-\s*각성\s*:\s*(\d)", re.M)
 CHARS_PER_MIN = 210
 
 # 각성도 — 낮을수록 조용하다. 뒤쪽에 배치한다.
@@ -44,10 +47,11 @@ def scan(path):
         lm = LINE.match(ln) if ln else None
         if lm:
             n += len(TAG.sub("", lm.group(2)).replace(" ", ""))
+    am = AROUSAL_RE.search(head)
     title = path.stem.split("_", 1)[-1].replace("-", " ")
     return {"file": path.name, "title": title, "genre": genre,
             "chars": n, "min": round(n / CHARS_PER_MIN, 2),
-            "calm": CALM.get(genre, 3),
+            "calm": int(am.group(1)) if am else CALM.get(genre, 3),
             "famous": any(f in title for f in FAMOUS)}
 
 

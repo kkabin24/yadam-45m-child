@@ -30,7 +30,11 @@ SENT_AVG_MAX, SENT_MAX = 25, 45
 NARRATION_MIN_RATIO = 0.70
 
 OPENERS = ("옛날 옛날", "옛날에", "아주 먼 옛날", "옛적에", "옛날 옛적")
-SLEEP_WORDS = ("잠", "꿈", "달빛", "눈을 감", "새근새근", "스르르")
+# ★닫는 신호 — 2026-09-06 리뷰 2회전으로 넓혔다. 20편이 전부 "…잠에 들었답니다"로 끝나면
+#   같은 문장을 열두 번 듣게 되어 닫는 신호로서의 힘을 잃는다. 그래서 잠이라는 낱말 대신
+#   숨·불빛·소리가 잦아드는 풍경으로 닫는 편을 여럿 두었고, 그 어휘를 여기 함께 담는다.
+SLEEP_WORDS = ("잠", "꿈", "달빛", "눈을 감", "새근새근", "스르르", "숨소리", "불씨",
+               "조용", "멀어지", "안개", "고요", "느려졌", "길어졌", "감았")
 
 # 큰 소리·각성 유발 의성어. 수면동화에서 쓰지 않는다.
 LOUD = ("쾅", "우당탕", "으악", "꽥", "빽", "왁", "쿵쾅", "우르르쾅", "펑", "탕탕")
@@ -142,9 +146,9 @@ def check(path: pathlib.Path, voices_cfg: dict):
     if not any(first.startswith(o) for o in OPENERS):
         warns.append(f"W3 첫 문장이 옛이야기 시작구가 아니다: {first[:30]}…")
 
-    last = next((t for _, t in reversed(lines) if t), "")
-    if not any(w in last for w in SLEEP_WORDS):
-        warns.append(f"W4 마지막 문장이 잠으로 이어지지 않는다: {last[:40]}…")
+    tail = [t for _, t in lines if t][-3:]          # 마지막 한 줄이 아니라 닫는 세 줄을 본다
+    if not any(w in " ".join(tail) for w in SLEEP_WORDS):
+        warns.append(f"W4 마지막 세 줄이 잠으로 이어지지 않는다: {tail[-1][:40]}…")
 
     for w in LOUD:
         if w in spoken:
