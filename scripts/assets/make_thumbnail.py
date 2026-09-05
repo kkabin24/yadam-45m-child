@@ -67,10 +67,16 @@ def main():
     ap.add_argument("--bottom", default="어린이 수면동화")
     ap.add_argument("--side", choices=["left", "right"], default="left",
                     help="문안을 놓을 쪽. 캐릭터 반대쪽에 둔다 (기본 left = 캐릭터가 오른쪽)")
+    ap.add_argument("--flip", action="store_true",
+                    help="원본을 좌우 반전한다. ★벤치는 편마다 좌우를 뒤집어 단조로움을 피하는데, "
+                         "우리 키비주얼은 캐릭터가 오른쪽 고정이다. --flip --side right 로 쓰면 "
+                         "에셋 한 장으로 반대 배치를 만든다(글자는 반전되지 않는다)")
     ap.add_argument("--font", default=DEFAULT_FONT)
     a = ap.parse_args()
 
     img = Image.open(a.src).convert("RGB")
+    if a.flip:
+        img = img.transpose(Image.FLIP_LEFT_RIGHT)
     if img.size != (W, H):
         # 16:9 로 가운데를 잘라 맞춘다 — 생성 이미지가 1376x768 등으로 나올 수 있다
         scale = max(W / img.width, H / img.height)
