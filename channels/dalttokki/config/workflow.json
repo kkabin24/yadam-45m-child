@@ -1,0 +1,5 @@
+{
+  "channel": "달토끼 잠자리동화",
+  "mode": "ask",
+  "_comment": "mode: auto=전체 자동, 결과만 보고 | ask=concept/asset검수/thumbnail만 대화형. asset 검수 게이트는 mode와 무관하게 항상 사람에게 확인한다(CLAUDE.md)."
+}

@@ -19,6 +19,37 @@ Claude Code에서 **"야담 영상 만들어줘"** 한마디로 시작하면, �
 
 ---
 
+## 0. 이 저장소에는 채널이 둘이다
+
+| 채널 | 무엇 | 스킬 | 한 편 |
+|---|---|---|---|
+| **yadam** (옛뜰야담) | 성인 대상 야담·괴담 내러티브 | `story-pd` | 45분 단편 × 2~3편 + 백색소음 |
+| **dalttokki** (달토끼 잠자리동화) | **어린이 수면동화 오디오북** | `sleep-pd` | 4~7분 단편 × 12편(약 1시간) + 백색소음 2시간 = 3시간 |
+
+아래 1~7절은 **yadam(story-pd)** 기준이다. 달토끼는 만드는 방식이 상당히 다르다:
+
+- **씬 이미지를 뽑지 않는다.** 화면은 고정 키비주얼 **1장** + 3초 챕터 카드뿐이다.
+  스토리보드·씬이미지·씬타이밍·켄번스·훅 클립 단계가 통째로 없다.
+- **렌더 게이트가 없다.** `scripts/render/build_sleep_video.py` 가 ffmpeg로 최종 mp4까지 만든다
+  (야담의 CapCut 수동 마무리와 다르다 — 편집할 것이 없어서다).
+- **대본은 초고를 사람에게 보여 주지 않는다.** 에이전트를 외부 리뷰어로 세워 4회전을 돌린 뒤
+  최종본만 보고한다(`CLAUDE.md` 「대본 품질 게이트」).
+- **이야기 은행**을 먼저 채운다 — `channels/dalttokki/stories/` 에 단편을 쌓아 두고,
+  영상마다 12편씩 골라 편성한다.
+
+```bash
+python3 scripts/script/check_story.py channels/dalttokki/stories        # ★대본 게이트
+python3 scripts/tts/dialogue_tts.py  channels/dalttokki/stories --dry-run  # 낭독 비용·청크 계산
+python3 scripts/render/build_sleep_video.py --help                      # 영상 조립
+python3 scripts/upload/build_sleep_meta.py --help                       # 제목·설명·태그
+python3 scripts/assets/make_thumbnail.py --help                         # 썸네일
+```
+
+근거 문서: [docs/benchmark/hohosam-2026-09.md](docs/benchmark/hohosam-2026-09.md)(벤치마크 전수 분석) ·
+[docs/benchmark/dalttokki-channel-design.md](docs/benchmark/dalttokki-channel-design.md)(채널 설계서)
+
+---
+
 ## 1. 처음 한 번만: 설치
 
 상세 절차는 **[docs/setup.md](docs/setup.md)** 를 따라가세요. 요약:

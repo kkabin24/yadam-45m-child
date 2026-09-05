@@ -1,0 +1,13 @@
+{
+  "_comment": "달토끼 잠자리동화 채널 고정 그림체 (2026-09-06 신설). 야담(웹툰)과 완전히 분리한다 — 이 채널은 어린이 수면동화용 '두툼한 파스텔 그림책' 화풍이다. 벤치마크(호호샘) 썸네일 9편 전수 분석 결과 공통 문법: ① 짙은 남보라 밤하늘 ② 부드러운 볼륨감의 플러시 인형 같은 형태 ③ 달빛 림라이트 ④ 눈을 감고 자는 캐릭터. era 자리표는 쓰지 않는다 — 이 채널은 전래동화 단일 시대라 문화앵커를 preset에 직접 박는다.",
+  "aspect_ratio": "16:9",
+  "max_concurrent": 3,
+
+  "preset": "Thick soft PASTEL STORYBOOK ILLUSTRATION for a children's bedtime picture book. Gentle volumetric rendering with rounded, plush, huggable forms — like a hand-painted soft-toy come to life. Shading is soft-edged and creamy, never a hard cel step, but always clearly placed so the form reads as three-dimensional: under the chin, under the belly, inside every fold. Colours are muted and warm-cool balanced, low saturation, nothing neon. LIGHTING: a large full moon is the key light, throwing a soft warm ivory rim along the top edge of every form, with cool indigo fill in the shadows. NIGHT PALETTE: deep indigo-violet sky (#1B1B3A to #2E1F5E), soft star bokeh, moonlight ivory (#FFD66B) as the only warm accent. Everything must feel calm, hushed, safe and sleepy — this image is meant to help a small child fall asleep. FACES: eyes are drawn as simple closed crescent curves (sleeping), with soft pink cheek blush; mouths are a small gentle closed smile, never showing teeth. CULTURAL ANCHOR: Korean traditional countryside at night — thatched-roof and tiled-roof hanok, low stone walls, persimmon tree, wooden mortar and pestle, paper-screen doors glowing faintly from within. The people and setting are KOREAN, NOT Chinese, NOT Japanese, NOT Western, NOT generic fantasy.",
+
+  "negative": "NOT flat vector art, NOT webtoon lineart, NOT bold black outlines, NOT Japanese anime, NOT chibi, NOT photorealistic, NOT a 3D CGI render with plastic specular highlights, NOT an oil painting, NOT sketchy or scribbly. No harsh contrast, no dramatic or scary lighting, no dark horror mood, no sharp teeth, no wide staring open eyes, no frightened or sad expressions. No neon or fluorescent colours, no heavy saturation. No text, no letters, no Korean characters, no numbers, no captions, no watermark, no signature, no logo. NO WHITE BORDER OF ANY KIND — no white margin, no white edge strip, no frame or matte around the picture, no rounded corners, no letterbox or pillarbox bands, not a framed illustration placed on a background. No drop shadow under the artwork, no card or sticker look.",
+
+  "scene_preset": "{PRESET}",
+  "scene_negative": "{NEGATIVE}",
+  "_comment_scene": "이 채널은 씬 이미지를 쓰지 않는다(고정 배경 1장 + 챕터 카드). scene_* 키는 storyboard/build.py 호환용 자리만 잡아 둔 것이며 현재 파이프라인에서 호출되지 않는다."
+}
