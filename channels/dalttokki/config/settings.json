@@ -1,23 +1,24 @@
 {
   "id": "dalttokki",
-  "name": "달토끼 잠자리동화",
+  "name": "달토끼네 잠자리동화",
   "type": "어린이 수면 오디오북 (전래동화·이솝우화)",
   "target": "아이를 재우는 부모 (아동용 설정 안 함 — docs/benchmark/hohosam-2026-09.md §6)",
   "tone": "소곤소곤 낮게, 느리게, 끝을 흐리듯 부드럽게. 아이를 재우는 목소리",
   "format": {
-    "_comment": "이 채널의 편성 규격. 야담(45분 단편)과 완전히 다르다 — 짧은 이야기를 여러 편 이어 붙이고 뒤에 백색소음을 단다.",
+    "_comment": "이 채널의 편성 규격. 야담(45분 단편)과 완전히 다르다 — 짧은 이야기를 여러 편 이어 붙이고 뒤에 백색소음을 단다. ★2026-09-18 개정: 인트로 + 이야기 10편 + 아웃트로(백색소음)로 총 2시간. 아웃트로 길이 = 7200 − (인트로 + 본편 실측) 로 맞춘다.",
     "story_min_sec": 240,
     "story_max_sec": 420,
     "story_target_sec": 330,
-    "stories_per_video": 12,
-    "narration_target_sec": 3600,
-    "noise_sec": 7200,
-    "total_target_sec": 10800,
-    "chars_per_min": 210,
-    "_comment_chars_per_min": "★추정치. 한국어 수면동화는 느리게 읽고 문단마다 여백이 붙어, 일반 낭독(250~300자/분)보다 훨씬 느리다. 210자/분 = 4~7분이 약 900~1,500자. 1호 낭독 실측 후 이 값과 scripts/script/check_story.py 의 CHARS_PER_MIN·BAND_MIN·BAND_MAX 를 함께 고친다.",
+    "stories_per_video": 10,
+    "narration_target_sec": 3000,
+    "noise_sec": 4200,
+    "total_target_sec": 7200,
+    "chars_per_min": 241,
+    "_comment_chars_per_min": "★실측 2026-09-20 — 01편 Vrew 낭독 11,473자(공백 제외, 구두점 포함) / 47.5분 = 241자/분. 편별 편차 작음(±5%). 4~7분 = 약 960~1,690자. check_story.py·build_lineup.py CHARS_PER_MIN 도 같은 값.",
     "story_chars_min": 900,
     "story_chars_max": 1500,
-    "story_chars_target": 1200
+    "story_chars_target": 1200,
+    "_comment_noise_sec": "목표값. 실제로는 total_target_sec 에서 인트로+본편 실측 길이를 뺀 나머지만큼 sleep_noise_2h_quiet.mp3 앞부분을 잘라 쓴다."
   },
   "image": {
     "engine": "gemini",

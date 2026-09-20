@@ -11,6 +11,8 @@ Usage:
         --out       channels/dalttokki/projects/01편/output/01편.mp4
     # 조립 계획만 보고 렌더하지 않는다
     ... --dry-run
+    # ★2시간 규격(2026-09-20): 인트로 + 루프 배경(새근새근 몽이) + 백색소음을 총 7200초에 맞춤
+    ... --intro channels/dalttokki/assets/intro/intro.mp4         --loop  channels/dalttokki/assets/keyvisual/mongi_sleep_loop.mp4 --total-sec 7200
 
 ★이 채널만 ffmpeg 직접 렌더다. 야담(story-pd)은 CapCut export 전용이지만(CLAUDE.md),
   이 채널의 영상은 정지 이미지 1장 + 3초 카드 + 오디오뿐이라 사람이 편집할 것이 없다.
@@ -83,6 +85,12 @@ def main():
     ap.add_argument("--audio", type=pathlib.Path, required=True, help="낭독 mp3")
     ap.add_argument("--chapters", type=pathlib.Path, help="chapters.json — 없으면 카드 없이 통짜")
     ap.add_argument("--noise", type=pathlib.Path, help="백색소음 mp3 — 없으면 붙이지 않는다")
+    ap.add_argument("--loop", type=pathlib.Path,
+                    help="★배경 루프 mp4 (sleep_loop.py 산출, 무음). 주면 정지 키비주얼 대신 이 클립을 "
+                         "낭독 내내 반복 재생하고 챕터 카드는 그 위에 얹는다")
+    ap.add_argument("--intro", type=pathlib.Path, help="인트로 클립 mp4 — 맨 앞에 붙인다(오디오 포함)")
+    ap.add_argument("--total-sec", type=float, default=0.0,
+                    help="영상 총 길이 목표(초). 주면 백색소음을 (총 − 인트로 − 낭독)만큼만 잘라 붙인다")
     ap.add_argument("--out", type=pathlib.Path, required=True)
     ap.add_argument("--font", default=DEFAULT_FONT)
     ap.add_argument("--card-sec", type=float, default=CARD_SEC)
@@ -95,7 +103,15 @@ def main():
 
     narr = duration(a.audio)
     chapters = json.loads(a.chapters.read_text(encoding="utf-8")) if a.chapters else []
+    intro = duration(a.intro) if (a.intro and a.intro.exists()) else 0.0
     noise = duration(a.noise) if (a.noise and a.noise.exists()) else 0.0
+    if noise and a.total_sec:
+        want = a.total_sec - intro - narr
+        if want <= 0:
+            raise SystemExit("error: 총 길이 목표(%.0f초)가 인트로+낭독(%.0f초)보다 짧다" % (a.total_sec, intro + narr))
+        if want > noise:
+            print("warning: 백색소음 파일(%.1f분)이 필요량(%.1f분)보다 짧다 — 있는 만큼만 붙인다" % (noise / 60, want / 60))
+        noise = min(noise, want)
 
     # 각 챕터의 [카드 3초] + [고정 이미지 나머지] 로 구간을 만든다
     segs = []
@@ -111,9 +127,10 @@ def main():
     if not segs:
         segs = [("still", narr, None)]
 
-    total = narr + noise
-    print("낭독 %.1f분 / 백색소음 %.1f분 / 합계 %.2f시간" % (narr / 60, noise / 60, total / 3600))
-    print("챕터 %d개 · 구간 %d개 (카드 %.0f초)" % (len(chapters), len(segs), a.card_sec))
+    total = intro + narr + noise
+    print("인트로 %.1f초 / 낭독 %.1f분 / 백색소음 %.1f분 / 합계 %.2f시간" % (intro, narr / 60, noise / 60, total / 3600))
+    print("챕터 %d개 · 구간 %d개 (카드 %.0f초) · 배경 %s" % (len(chapters), len(segs), a.card_sec,
+                                                        ("루프 " + a.loop.name) if a.loop else "정지 이미지"))
     if a.dry_run:
         for kind, sec, title in segs[:6]:
             print("  %-5s %6.1fs %s" % (kind, sec, title or ""))
@@ -155,8 +172,8 @@ def main():
             run(["ffmpeg", "-y", "-loglevel", "error",
                  "-loop", "1", "-i", str(black), "-i", str(a.noise),
                  "-c:v", "libx264", "-preset", "veryfast", "-crf", "28", "-pix_fmt", "yuv420p",
-                 "-r", str(FPS), "-tune", "stillimage",
-                 "-c:a", "aac", "-b:a", "128k", "-shortest", str(part2)])
+                 "-r", str(FPS), "-tune", "stillimage", "-video_track_timescale", str(FPS * 1000),
+                 "-c:a", "aac", "-b:a", "160k", "-ar", "44100", "-ac", "2", "-t", "%.3f" % noise, str(part2)])
             parts.append(part2)
 
         a.out.parent.mkdir(parents=True, exist_ok=True)

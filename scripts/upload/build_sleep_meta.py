@@ -76,7 +76,7 @@ def main():
     if a.producer:
         lines.append("⭐ 기획 및 제작 : %s" % a.producer)
     lines += ["", "#오디오북 #달토끼 #%s" % a.genre, "",
-              "© 2026 달토끼 잠자리동화. All Rights Reserved."]
+              "© 2026 달토끼네 잠자리동화. All Rights Reserved."]
     desc = "\n".join(lines)
 
     tags = FIXED_TAGS + GENRE_TAGS[a.genre]

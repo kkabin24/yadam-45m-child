@@ -24,7 +24,7 @@ Usage:
 import argparse, json, pathlib, re, sys
 
 BAND_MIN, BAND_MAX = 900, 1500
-CHARS_PER_MIN = 210   # ★추정치. 수면동화는 느리게 읽고 문단마다 여백이 붙는다.
+CHARS_PER_MIN = 241   # ★실측 2026-09-20 01편 Vrew 낭독: 11,473자(공백 제외) / 47.5분. 편별 218~230(구두점 제외 기준).
                       #   1호 낭독 실측 후 여기와 settings.json format.chars_per_min 을 함께 고친다.
 SENT_AVG_MAX, SENT_MAX = 25, 45
 NARRATION_MIN_RATIO = 0.70

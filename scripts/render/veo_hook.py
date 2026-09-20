@@ -5,13 +5,18 @@ VEO_HOOK — 훅 인트로 립싱크 클립 자동화 (SCENE_TIMING 후, RENDER 
 씬1 이미지를 시작 프레임으로 Veo i2v 8초 립싱크 클립을 생성하고,
 렌더 storyboard(`{V}/storyboard.json`) 씬1에 `video_path`를 주입한다.
 
-엔진 (settings.json image.veo.engine, 기본 gemini):
-  - gemini: Gemini API predictLongRunning (⚠️유료, GEMINI_API_KEY — 데몬 불필요, 기본)
-            모델 기본 veo-3.1-fast-generate-preview, 1080p, 8초, 네이티브 오디오(대사 포함)
-  - flow:   labs.google 웹세션 (flow_veo.py — 데몬 :포트 + Chrome 로그인 필요, ~20크레딧/8초)
-  - pjn:    로컬 5090 서버 api.project-n.work (무료, PJN_API_KEY — MiniMax H3 i2v, 오디오 포함)
+🚫 절대 금지 (2026-09-06 사용자 지시 · CLAUDE.md 「🚫 절대 금지」 절):
+  GEMINI_API_KEY 로는 영상을 만들지 않는다. veo 훅은 PJN_API_KEY(pjn 엔진)로만 만든다.
+  GEMINI_API_KEY 는 이미지 전용(턴어라운드·배경·씬 이미지)이다. 두 키를 섞지 않는다.
+  engine=gemini 는 아래 main() 에서 하드 차단된다 — 풀려면 사용자가 CLAUDE.md 의 그 절과
+  이 가드를 직접 고쳐야 한다. pjn 이 안 되면 훅을 포기하고 스틸 도입으로 간다.
+
+엔진 (settings.json image.veo.engine, 기본 pjn):
+  - pjn:    로컬 5090 서버 api.project-n.work (무료, PJN_API_KEY — MiniMax H3 i2v, 오디오 포함) ★기본·유일
             최대 1376x768 · 대사는 H3 태그 형식 별도 프롬프트(veo_hook_prompt_pjn.txt) 사용
             첫 프레임을 입력 이미지에 픽셀 고정(스틸→클립 컷 연결이 Veo보다 자연스러움)
+  - gemini: 🚫 차단됨 — Gemini API Veo(유료). 지정하면 생성하지 않고 종료(exit 2)한다.
+  - flow:   labs.google 웹세션 (flow_veo.py — 데몬 :포트 + Chrome 로그인 필요). 무료 계정은 Veo 권한 없음.
 
 실패해도 프롬프트/매니페스트 파일은 항상 남으므로 수동 재시도 가능:
   {V}/veo_hook.json 의 manual_cmd 를 그대로 실행하면 된다.
@@ -25,7 +30,7 @@ VEO_HOOK — 훅 인트로 립싱크 클립 자동화 (SCENE_TIMING 후, RENDER 
 
 Usage:
     python3 scripts/render/veo_hook.py <project_dir> [--prompt-only] [--force]
-        [--engine gemini|flow|pjn] [--model MODEL] [--duration 8] [--config settings.json]
+        [--engine pjn|flow] [--model MODEL] [--duration 8] [--config settings.json]
 """
 import argparse
 import base64
@@ -539,7 +544,8 @@ def main() -> int:
     ap.add_argument("--prompt-only", action="store_true", help="무료: 프롬프트·매니페스트만 생성")
     ap.add_argument("--force", action="store_true", help="mp4가 있어도 재생성 (⚠️과금 재발생)")
     ap.add_argument("--engine", default=None, choices=["gemini", "flow", "pjn"],
-                    help="기본: settings image.veo.engine → gemini. pjn=로컬 5090 서버(무료)")
+                    help="기본: settings image.veo.engine → pjn(로컬 5090 서버·무료). "
+                         "gemini 는 🚫 차단됨(CLAUDE.md 「절대 금지」) — 지정하면 종료한다.")
     ap.add_argument("--model", default=None)
     ap.add_argument("--duration", type=int, default=8, choices=[4, 6, 8], help="gemini 전용 (기본 8초)")
     ap.add_argument("--resolution", default=None, help="gemini 전용 (기본 settings → 1080p)")
@@ -587,7 +593,21 @@ def main() -> int:
         settings = json.loads(cfg_path.read_text(encoding="utf-8"))
     veo_cfg = (settings.get("image") or {}).get("veo") or {}
     render_cfg = settings.get("render") or {}
-    engine = args.engine or veo_cfg.get("engine") or "gemini"
+    engine = args.engine or veo_cfg.get("engine") or "pjn"
+
+    # ---- 🚫 하드 가드: GEMINI_API_KEY 로 영상 생성 금지 ----------------------
+    # 2026-09-06 사용자 지시 · CLAUDE.md 「🚫 절대 금지」 절.
+    # veo 훅은 PJN_API_KEY(pjn)로만 만든다. GEMINI_API_KEY 는 이미지 전용이다.
+    # 예외 없음 — 풀려면 사용자가 CLAUDE.md 의 그 절과 이 가드를 함께 고쳐야 한다.
+    if engine == "gemini":
+        src = "--engine gemini" if args.engine else f"settings image.veo.engine ({cfg_path})"
+        print(f"error: 🚫 gemini 영상 생성은 금지돼 있다 (요청 출처: {src}).", file=sys.stderr)
+        print("       GEMINI_API_KEY 는 이미지 전용이고, veo 훅은 PJN_API_KEY(--engine pjn)로만 만든다.",
+              file=sys.stderr)
+        print("       CLAUDE.md 「🚫 절대 금지 — GEMINI_API_KEY로 영상 생성」 절 참조.", file=sys.stderr)
+        print("       pjn 이 안 되면 훅을 포기하고 스틸 도입으로 간다.", file=sys.stderr)
+        return 2
+    # ----------------------------------------------------------------------------
     ratio = veo_cfg.get("ratio") or "16:9"
     resolution = args.resolution or veo_cfg.get("resolution") or "1080p"
     flow_cfg = veo_cfg.get("flow") or {}
@@ -695,6 +715,11 @@ def main() -> int:
     else:
         prompt = prompt_path.read_text(encoding="utf-8")
         if engine == "gemini":
+            # 🚫 위 하드 가드에서 이미 막혔어야 하는 경로다 (2차 방어).
+            save("failed")
+            print("error: 🚫 gemini 영상 생성 금지 — CLAUDE.md 「절대 금지」 절.", file=sys.stderr)
+            return 2
+        elif False:  # (구 gemini 백엔드 호출부 — 이력 보존용, 실행되지 않는다)
             key = find_env_key(P, "GEMINI_API", "GEMINI_API_KEY", "GOOGLE_API_KEY")
             if not key:
                 save("failed")
