@@ -26,13 +26,14 @@ GENRE = re.compile(r"^-\s*갈래\s*:\s*(.+)$", re.M)
 # ★편별 각성도가 적혀 있으면 그것을 쓴다. 갈래만으로 매기면 너무 거칠다 —
 #   「해와 달이 된 오누이」는 유래담이지만 곡선이 최악이고, 「호랑이와 곶감」은 웃음인데 상위권이다.
 AROUSAL_RE = re.compile(r"^-\s*각성\s*:\s*(\d)", re.M)
-CHARS_PER_MIN = 210
+CHARS_PER_MIN = 241   # ★실측 2026-09-20 (01편 Vrew 낭독)
 
 # 각성도 — 낮을수록 조용하다. 뒤쪽에 배치한다.
 CALM = {"유래담": 0, "보답": 1, "우정": 1, "약속": 1, "도움": 2, "협동": 2,
         "정직": 2, "지혜": 3, "깨달음": 3, "욕심": 3, "형제": 3, "도깨비": 4, "꾀": 4, "웃음": 5}
 # 널리 아는 이야기 — 첫 편 후보(제목 검색량이 높다)
-FAMOUS = ("금도끼", "흥부", "해와 달", "호랑이와 곶감", "혹부리", "콩쥐", "선녀")
+FAMOUS = ("금도끼", "흥부", "해와 달", "호랑이와 곶감", "혹부리", "콩쥐", "선녀",
+          "심청", "임금님 귀", "의좋은", "개미와 베짱이", "토끼와 거북이", "해님과 바람", "온달")
 
 
 def scan(path):
@@ -63,6 +64,7 @@ def main():
     ap.add_argument("--target-min", type=float, default=60.0, help="낭독 목표 길이(분)")
     ap.add_argument("--exclude", type=pathlib.Path, action="append", default=[],
                     help="이미 쓴 lineup.json (여러 번 줄 수 있다)")
+    ap.add_argument("--include", help="은행 대신 번호 범위로 고정 (예: 001-010, 003,007). 순서 규칙은 그대로 적용")
     ap.add_argument("--out", type=pathlib.Path)
     a = ap.parse_args()
 
@@ -73,6 +75,13 @@ def main():
 
     rows = [scan(f) for f in sorted(a.stories.glob("*.md")) if not f.name.startswith("_")]
     rows = [r for r in rows if r["file"] not in used]
+    if a.include:
+        want = set()
+        for tok in a.include.split(","):
+            lo, _, hi = tok.strip().partition("-")
+            want |= {"%03d" % n for n in range(int(lo), int(hi or lo) + 1)}
+        rows = [r for r in rows if r["file"][:3] in want]
+        a.count = len(rows)
     if len(rows) < a.count:
         print("warning: 은행에 %d편뿐입니다 — %d편을 요청했습니다" % (len(rows), a.count), file=sys.stderr)
         a.count = len(rows)
